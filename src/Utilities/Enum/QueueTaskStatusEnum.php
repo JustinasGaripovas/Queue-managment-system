@@ -4,7 +4,7 @@
 namespace App\Utilities\Enum;
 
 
-class QueueTaskStatus
+class QueueTaskStatusEnum
 {
     const NONE = 0;
     const NEW = 1;

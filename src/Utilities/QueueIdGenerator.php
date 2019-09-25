@@ -9,17 +9,12 @@ class QueueIdGenerator extends AbstractIdGenerator
 {
     /**
      * Generates an identifier for an entity.
-     *
-     * @param EntityManager $em
-     * @param object|null   $entity
-     *
-     * @return mixed
      */
     public function generate(EntityManager $em, $entity)
     {
         dump($entity);
-        die;
 
+        return 1;
         // TODO: Implement generate() method.
     }
 }

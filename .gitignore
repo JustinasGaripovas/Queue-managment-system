@@ -20,5 +20,4 @@
 .web-server-pid
 ###< symfony/web-server-bundle ###
 
-
 .idea/*

@@ -2,22 +2,28 @@
 
 namespace App\Entity;
 
+use App\Utilities\Enum\QueueTaskStatusEnum;
+use App\Utilities\StateSwitch\QueueTaskStateSwitch;
+use App\Utilities\Traits\TimeStamp;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\CustomIdGenerator;
 
+
 /**
  * @ORM\Entity(repositoryClass="App\Repository\QueueTaskRepository")
+ * @ORM\HasLifecycleCallbacks()
  */
-class QueueTask
+class QueueTask extends QueueTaskStateSwitch
 {
+    use TimeStamp;
 
     /**
      * @ORM\Id()
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     * @CustomIdGenerator(class="App\Utilities\QueueIdGenerator")
+     * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     *
      */
     private $id;
 
@@ -28,8 +34,14 @@ class QueueTask
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\QueueTaskStatusLog", mappedBy="queueTask", orphanRemoval=true, cascade={"persist"})
+     * @ORM\OrderBy({"id" = "DESC"})
      */
     private $statusList;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $queueNumber;
 
     public function __construct()
     {
@@ -53,6 +65,18 @@ class QueueTask
         return $this;
     }
 
+    public function getQueueNumber(): ?int
+    {
+        return $this->queueNumber;
+    }
+
+    public function setQueueNumber(int $queueNumber): self
+    {
+        $this->queueNumber = $queueNumber;
+
+        return $this;
+    }
+
     /**
      * @return Collection|QueueTaskStatusLog[]
      */
@@ -64,16 +88,39 @@ class QueueTask
     public function addStatus($status)
     {
         $statusObject = new QueueTaskStatusLog();
-        $currentDate = new\DateTime('now');
 
-        $statusObject->setStatus($status);
-        $statusObject->setCreatedAt($currentDate->getTimestamp());
+        if ($this->getNewestStatusList() === -1){
+            $statusObject->setStatus(QueueTaskStatusEnum::NEW);
+            $this->addStatusList($statusObject);
+        }
 
-        $this->addStatusList($statusObject);
+        if ($this->canSwitchState($this->getNewestStatusList(), $status))
+        {
+            $statusObject->setStatus($status);
+            $this->addStatusList($statusObject);
+        }else{
+            // TODO: Return state mismatch exception
+            return $this;
+        }
+
+        return $this;
+    }
+
+    public function getNewestStatusList()
+    {
+        $statusObject = $this->statusList->last() ;
+
+        if ($statusObject === false)
+            return -1;
+        else
+            return $statusObject->getStatus();
     }
 
     public function addStatusList(QueueTaskStatusLog $statusList): self
     {
+        $currentDate = new\DateTime('now');
+        $statusList->setCreatedAt($currentDate->getTimestamp());
+
         if (!$this->statusList->contains($statusList)) {
             $this->statusList[] = $statusList;
             $statusList->setQueueTask($this);

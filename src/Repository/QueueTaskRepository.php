@@ -36,15 +36,20 @@ class QueueTaskRepository extends ServiceEntityRepository
     }
     */
 
-    /*
-    public function findOneBySomeField($value): ?QueueTask
+
+    public function findOldestIdToday()
     {
-        return $this->createQueryBuilder('q')
-            ->andWhere('q.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        $conn = $this->getEntityManager()
+            ->getConnection();
+
+        $sql = "SELECT queue_task.queue_number FROM queue_task
+                WHERE queue_task.created_at > UNIX_TIMESTAMP(NOW() - INTERVAL 24 HOUR)
+                ORDER BY queue_number DESC;
+                ";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
     }
-    */
+
 }

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\QueueTask;
+use App\Repository\QueueTaskRepository;
 use App\Utilities\Enum\QueueTaskStatusEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -34,15 +35,22 @@ class QueueTaskController extends AbstractController
     /**
      * @Route("/queue/task/new" , name="queue_task_new")
      */
-    public function queueTaskNew(Request $request): JsonResponse
+    public function queueTaskNew(Request $request, QueueTaskRepository $queueTaskRepository): JsonResponse
     {
         $queueTask = new QueueTask();
 
         $queueTask->addStatus(QueueTaskStatusEnum::NEW);
+        $queueTask->addStatus(QueueTaskStatusEnum::WAITING);
+        $queueTask->addStatus(QueueTaskStatusEnum::NONE);
+
+        if (!empty($queueTaskRepository->findOldestIdToday()))
+            $queueTask->setQueueNumber($queueTaskRepository->findOldestIdToday()[0]['queue_number'] + 1);
+        else
+            $queueTask->setQueueNumber(0);
 
         $this->entityManager->persist($queueTask);
         $this->entityManager->flush();
 
-        return new JsonResponse();
+        return new JsonResponse(['task'=>$queueTask]);
     }
 }

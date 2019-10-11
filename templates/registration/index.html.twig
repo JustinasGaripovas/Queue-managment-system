@@ -48,16 +48,18 @@
 {% macro recursiveInterest(interest) %}
     {% import _self as self %}
 
-    <button class="btn " style="width: 100%; background-color: #eadca6"
-            onclick="showFurtherList('{{ interest.getCode }}', '{{ interest.id }}')">{{ interest.fullName }}</button>
-
     {% if interest.subType is not null %}
-        <div id="{{ interest.code }}">
-            {% for subInterest in interest.subType %}
+        <button class="btn" style="width: 100%; background-color: cornflowerblue"
+                onclick="showFurtherList('{{ interest.getCode }}', '{{ interest.id }}')">{{ interest.fullName }}</button>
+
+        <div id="{{ interest.code }}" style="display: none">
+            {% for subInterest in interest.interestType %}
                 {{ self.recursiveInterest(subInterest) }}
             {% endfor %}
         </div>
     {% else %}
+        <button class="btn" style="width: 100%; background-color: #eadca6"
+                onclick="showFurtherList('{{ interest.getCode }}', '{{ interest.id }}')">{{ interest.fullName }}</button>
 
     {% endif %}
 

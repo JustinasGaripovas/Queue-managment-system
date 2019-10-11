@@ -4,18 +4,15 @@ namespace App\Controller;
 
 use App\Entity\QueueTask;
 use App\Exception\QueueTaskException\InterestTypeInvalid;
-use App\Form\QueueTaskType;
 use App\Repository\InterestTypeRepository;
 use App\Repository\QueueTaskRepository;
 use App\Response\QueueResponse\QueueTaskNewSuccessResponse;
 use App\Response\QueueResponse\QueueTaskNoAvalibleNumbersResponse;
-use App\Utilities\Enum\QueueTaskStatusEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\NonUniqueResultException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 class QueueTaskController extends AbstractController
@@ -55,16 +52,11 @@ class QueueTaskController extends AbstractController
 
         if ($oldestId->getQueueNumber() >= 99)
         {
-            dump("var 1");
-
             if ($nextAvailable === null)
                 return null;
 
             return $nextAvailable->getQueueNumber();
         }
-
-        dump("var 2");
-
 
         return $oldestId->getQueueNumber() + 1;
     }

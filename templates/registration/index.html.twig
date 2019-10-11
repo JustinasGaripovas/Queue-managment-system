@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello RegistrationController!{% endblock %}
+
+{% block javascripts %}
+    <script>
+        function showFurtherList(code, id) {
+            //Jei jis turi vaiku juos atodarom jei ne neatidarom
+            $(`#${code}`).toggle();
+
+            //TODO: ajax send with parameters
+            if (getDivChildrenLength(`#${code}`) === 0)
+                ajaxSendWithParams('{{ path('queue_task_new') }}', {interestCode: code, interestId: id})
+
+        }
+
+        function ajaxSendWithParams(path, data) {
+            let ajax = $.ajax({
+                url: path,
+                type: 'POST',
+                data: data,
+                dataType: 'json',
+                async: false,
+            });
+
+            console.log("wa");
+
+            ajax.done(function (data) {
+
+                if (data['response']['error_code'] === "00")
+                    console.log("Success")
+                else
+                    console.log("Error")
+
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+
+            });
+
+        }
+
+        function getDivChildrenLength(selector) {
+            return $(selector).children().length
+        }
+
+    </script>
+{% endblock %}
+
+{% macro recursiveInterest(interest) %}
+    {% import _self as self %}
+
+    <button class="btn " style="width: 100%; background-color: #eadca6"
+            onclick="showFurtherList('{{ interest.getCode }}', '{{ interest.id }}')">{{ interest.fullName }}</button>
+
+    {% if interest.subType is not null %}
+        <div id="{{ interest.code }}">
+            {% for subInterest in interest.subType %}
+                {{ self.recursiveInterest(subInterest) }}
+            {% endfor %}
+        </div>
+    {% else %}
+
+    {% endif %}
+
+{% endmacro %}
+
+{% block body %}
+
+    {% from _self import recursiveInterest %}
+
+    <div class="container p-3" style="height: 100vh; width: 100vw;">
+
+        <div class="d-flex align-items-stretch ">
+            <div class="container">
+                {% for ineterest in baseInterest %}
+                    {{ recursiveInterest(ineterest) }}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

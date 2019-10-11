@@ -2,10 +2,9 @@
 
 namespace App\Utilities\StateSwitch;
 
-use App\Entity\QueueTask;
 use App\Utilities\Enum\QueueTaskStatusEnum;
 
-class QueueTaskStateSwitch extends AbstractStateSwitch
+class QueueTaskStateSwitch extends StateSwitch
 {
    public function canSwitchState(int $currentState, int $newState, array $relations = QueueTaskStatusEnum::RELATIONS): bool
    {

@@ -3,54 +3,98 @@
 namespace App\Controller;
 
 use App\Entity\QueueTask;
+use App\Exception\QueueTaskException\InterestTypeInvalid;
+use App\Form\QueueTaskType;
+use App\Repository\InterestTypeRepository;
 use App\Repository\QueueTaskRepository;
+use App\Response\QueueResponse\QueueTaskNewSuccessResponse;
+use App\Response\QueueResponse\QueueTaskNoAvalibleNumbersResponse;
 use App\Utilities\Enum\QueueTaskStatusEnum;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\NonUniqueResultException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 class QueueTaskController extends AbstractController
 {
     private $entityManager;
+    private $queueTaskRepository = QueueTaskRepository::class;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(EntityManagerInterface $entityManager, QueueTaskRepository $queueTaskRepository)
     {
         $this->entityManager = $entityManager;
+        $this->queueTaskRepository = $queueTaskRepository;
     }
 
     /**
-     * @Route("/queue/task/registration", name="queue_task_registration")
+     * @Route("/", name="registration")
      */
-    public function queueTaskRegistration()
+    public function index(InterestTypeRepository $interestTypeRepository)
     {
-        return $this->render('abstract_queue_task/index.html.twig', [
-            'controller_name' => 'QueueTaskController',
+        return $this->render('registration/index.html.twig', [
+            'baseInterest' => $interestTypeRepository->findAllRoots()
         ]);
     }
 
-    //, condition="request.isXmlHttpRequest()"
+    /**
+     * @param QueueTask $queueTask
+     * @return int
+     * @throws NonUniqueResultException
+     */
+    private function getQueueNumber(QueueTask $queueTask)
+    {
+        $interestTypeId = $queueTask->getInterestType()->getId();
+        $oldestId = $this->queueTaskRepository->findOldestIdToday($interestTypeId);
+        $nextAvailable = $this->queueTaskRepository->findNextAvailable($interestTypeId);
+
+        if (empty($oldestId))
+            return 0;
+
+        if ($oldestId->getQueueNumber() >= 99)
+        {
+            dump("var 1");
+
+            if ($nextAvailable === null)
+                return null;
+
+            return $nextAvailable->getQueueNumber();
+        }
+
+        dump("var 2");
+
+
+        return $oldestId->getQueueNumber() + 1;
+    }
 
     /**
-     * @Route("/queue/task/new" , name="queue_task_new")
+     * @Route("/new" , name="queue_task_new", condition="request.isXmlHttpRequest()")
+     * @param Request $request
+     * @param InterestTypeRepository $interestTypeRepository
+     * @return JsonResponse
+     * @throws NonUniqueResultException
      */
-    public function queueTaskNew(Request $request, QueueTaskRepository $queueTaskRepository): JsonResponse
+    public function queueTaskNew(Request $request, InterestTypeRepository $interestTypeRepository): JsonResponse
     {
         $queueTask = new QueueTask();
 
-        $queueTask->addStatus(QueueTaskStatusEnum::NEW);
-        $queueTask->addStatus(QueueTaskStatusEnum::WAITING);
-        $queueTask->addStatus(QueueTaskStatusEnum::NONE);
+        $interestId = $request->request->get('interestId');
+        if (($interestType = $interestTypeRepository->findOneById($interestId)) === null)
+            throw new InterestTypeInvalid();
 
-        if (!empty($queueTaskRepository->findOldestIdToday()))
-            $queueTask->setQueueNumber($queueTaskRepository->findOldestIdToday()[0]['queue_number'] + 1);
+        $queueTask->setInterestType($interestType);
+
+        if (($queueNumber = $this->getQueueNumber($queueTask)) !== null)
+            $queueTask->setQueueNumber($queueNumber);
         else
-            $queueTask->setQueueNumber(0);
+            return new QueueTaskNoAvalibleNumbersResponse();
 
         $this->entityManager->persist($queueTask);
         $this->entityManager->flush();
 
-        return new JsonResponse(['task'=>$queueTask]);
+        //TODO: Return separate success response
+        return new QueueTaskNewSuccessResponse('Success', ['queue_number' => $queueTask->getQueueNumber()]);
     }
 }

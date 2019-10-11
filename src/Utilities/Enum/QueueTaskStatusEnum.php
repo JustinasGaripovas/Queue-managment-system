@@ -16,7 +16,6 @@ class QueueTaskStatusEnum
     const UNSOLVABLE = 6;
 
     // Value relations
-
     const RELATIONS = [
         [1],        // NONE
         [2],        // NEW
@@ -24,6 +23,10 @@ class QueueTaskStatusEnum
         [],         // SOLVED
         [],         // DENIED
         [],         // UNSOLVABLE
+    ];
+
+    const END = [
+        4, 5, 6
     ];
 
 }

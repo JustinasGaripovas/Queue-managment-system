@@ -2,18 +2,24 @@
 
 namespace App\Entity;
 
+use App\Exception\QueueTaskException\StateSwitchException;
 use App\Utilities\Enum\QueueTaskStatusEnum;
 use App\Utilities\StateSwitch\QueueTaskStateSwitch;
 use App\Utilities\Traits\TimeStamp;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\CustomIdGenerator;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\QueueTaskRepository")
  * @ORM\HasLifecycleCallbacks()
+ * @UniqueEntity(
+ *     fields={"isActive", "queueNumber"},
+ *     errorPath="queueNumber",
+ *     message="This number is already in use."
+ * )
  */
 class QueueTask extends QueueTaskStateSwitch
 {
@@ -23,14 +29,9 @@ class QueueTask extends QueueTaskStateSwitch
      * @ORM\Id()
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     *
      */
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $interestField;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\QueueTaskStatusLog", mappedBy="queueTask", orphanRemoval=true, cascade={"persist"})
@@ -43,26 +44,28 @@ class QueueTask extends QueueTaskStateSwitch
      */
     private $queueNumber;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\InterestType", inversedBy="queueTasks")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $interestType;
+
+    /**
+     * @ORM\Column(type="boolean", options={"default" : 1})
+     */
+    private $isQueueNumberInUse=true;
+
     public function __construct()
     {
         $this->statusList = new ArrayCollection();
+
+        $this->setIsQueueNumberInUse(true);
+        $this->addStatus(QueueTaskStatusEnum::NEW);
     }
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getInterestField(): ?string
-    {
-        return $this->interestField;
-    }
-
-    public function setInterestField(?string $interestField): self
-    {
-        $this->interestField = $interestField;
-
-        return $this;
     }
 
     public function getQueueNumber(): ?int
@@ -73,6 +76,8 @@ class QueueTask extends QueueTaskStateSwitch
     public function setQueueNumber(int $queueNumber): self
     {
         $this->queueNumber = $queueNumber;
+
+        $this->isActive = true;
 
         return $this;
     }
@@ -89,18 +94,17 @@ class QueueTask extends QueueTaskStateSwitch
     {
         $statusObject = new QueueTaskStatusLog();
 
-        if ($this->getNewestStatusList() === -1){
+        if ($this->getNewestStatusList() === -1) {
             $statusObject->setStatus(QueueTaskStatusEnum::NEW);
             $this->addStatusList($statusObject);
+            return $this;
         }
 
-        if ($this->canSwitchState($this->getNewestStatusList(), $status))
-        {
+        if ($this->canSwitchState($this->getNewestStatusList(), $status)) {
             $statusObject->setStatus($status);
             $this->addStatusList($statusObject);
-        }else{
-            // TODO: Return state mismatch exception
-            return $this;
+        } else {
+            throw new StateSwitchException();
         }
 
         return $this;
@@ -108,7 +112,7 @@ class QueueTask extends QueueTaskStateSwitch
 
     public function getNewestStatusList()
     {
-        $statusObject = $this->statusList->last() ;
+        $statusObject = $this->statusList->last();
 
         if ($statusObject === false)
             return -1;
@@ -120,6 +124,11 @@ class QueueTask extends QueueTaskStateSwitch
     {
         $currentDate = new\DateTime('now');
         $statusList->setCreatedAt($currentDate->getTimestamp());
+
+        if (in_array($statusList->getStatus(), QueueTaskStatusEnum::END)) {
+            $this->isActive = false;
+            $this->isQueueNumberInUse = false;
+        }
 
         if (!$this->statusList->contains($statusList)) {
             $this->statusList[] = $statusList;
@@ -138,6 +147,30 @@ class QueueTask extends QueueTaskStateSwitch
                 $statusList->setQueueTask(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getInterestType(): ?InterestType
+    {
+        return $this->interestType;
+    }
+
+    public function setInterestType(?InterestType $interestType): self
+    {
+        $this->interestType = $interestType;
+
+        return $this;
+    }
+
+    public function getIsQueueNumberInUse(): ?bool
+    {
+        return $this->isQueueNumberInUse;
+    }
+
+    public function setIsQueueNumberInUse(bool $isQueueNumberInUse): self
+    {
+        $this->isQueueNumberInUse = $isQueueNumberInUse;
 
         return $this;
     }

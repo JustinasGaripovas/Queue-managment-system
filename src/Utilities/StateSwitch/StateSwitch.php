@@ -5,7 +5,7 @@ namespace App\Utilities\StateSwitch;
 
 
 
-class AbstractStateSwitch
+class StateSwitch
 {
     public function canSwitchState(int $currentState, int $newState, array $relations): bool
     {

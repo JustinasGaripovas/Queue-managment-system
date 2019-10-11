@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\QueueTask;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\ORM\NonUniqueResultException;
 
 /**
  * @method QueueTask|null find($id, $lockMode = null, $lockVersion = null)
@@ -19,37 +20,66 @@ class QueueTaskRepository extends ServiceEntityRepository
         parent::__construct($registry, QueueTask::class);
     }
 
-    // /**
-    //  * @return QueueTask[] Returns an array of QueueTask objects
-    //  */
-    /*
-    public function findByExampleField($value)
+
+    /**
+     * @param $interestType
+     * @return mixed
+     * @throws NonUniqueResultException
+     */
+    public function findOldestIdToday($interestType)
     {
-        return $this->createQueryBuilder('q')
-            ->andWhere('q.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('q.id', 'ASC')
-            ->setMaxResults(10)
+        return $this->createQueryBuilder('qt')
+            ->innerJoin('qt.interestType', 'i', 'i.id = qt.interestType')
+            ->andWhere('i.id = :interestType')
+            ->setParameter('interestType', $interestType)
+            ->andWhere('qt.createdAt > UNIX_TIMESTAMP(CURRENT_DATE())')
+            ->orderBy('qt.queueNumber','desc')
+            ->setMaxResults(1)
             ->getQuery()
-            ->getResult()
-        ;
+            ->getOneOrNullResult();
     }
-    */
 
-
-    public function findOldestIdToday()
+    /**
+     * @param $interestType
+     * @return QueueTask|null
+     * @throws NonUniqueResultException
+     */
+    public function findNextAvailable($interestType):? QueueTask
     {
-        $conn = $this->getEntityManager()
-            ->getConnection();
+        //-  Reikia rasti maziausia
+        //-  Skaiciu kuriu nera aktyviu
 
-        $sql = "SELECT queue_task.queue_number FROM queue_task
-                WHERE queue_task.created_at > UNIX_TIMESTAMP(NOW() - INTERVAL 24 HOUR)
-                ORDER BY queue_number DESC;
-                ";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute();
+        $query = $this->createQueryBuilder('qt')
+            ->andWhere('qt.isQueueNumberInUse = false')
+            ->andWhere('qt.createdAt > UNIX_TIMESTAMP(CURRENT_DATE())')
+            ->innerJoin('qt.interestType', 'i', 'i.id = qt.interestType')
+            ->andWhere('i.id = :interestType')
+            ->setParameter('interestType', $interestType)
+            ->orderBy('qt.queueNumber','asc')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
 
-        return $stmt->fetchAll();
+        if ($query === null)
+            return null;
+
+        $updateQuery = $this->createQueryBuilder('q')
+            ->update('App:QueueTask', 'uq')
+            ->andWhere('uq.queueNumber = :queueNumber')
+            ->setParameter('queueNumber', $query->getQueueNumber())
+            ->andWhere('uq.createdAt > UNIX_TIMESTAMP(CURRENT_DATE())')
+            ->andWhere('uq.interestType = :interestType')
+            ->setParameter('interestType', $interestType)
+            ->set('uq.isQueueNumberInUse', 1)
+            ->set('uq.isActive', 0)
+        ;
+
+        $updateQuery->getQuery()->execute();
+
+        /*Danger*/
+
+        return $query;
     }
 
 }

@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}EmployeeDesk{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="py-5">
+            <h1 class="mb-3 text-center">EmployeeDesk</h1>
+
+            <table class="table">
+                <tbody>
+                <tr>
+                    <th>Id</th>
+                    <td>{{ employee_desk.id }}</td>
+                </tr>
+                <tr>
+                    <th>Number</th>
+                    <td>{{ employee_desk.number }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

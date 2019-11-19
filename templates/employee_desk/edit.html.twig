@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit EmployeeDesk{% endblock %}
+
+{% block body %}
+
+    <div class="container">
+        <div class="py-5">
+            <h1 class="text-center mb-3">Edit EmployeeDesk</h1>
+
+            {{ include('employee_desk/_form.html.twig', {'button_label': 'Update'}) }}
+            <br>
+            {{ include('employee_desk/_delete_form.html.twig') }}
+        </div>
+    </div>
+{% endblock %}

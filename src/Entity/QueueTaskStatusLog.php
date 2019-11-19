@@ -32,6 +32,16 @@ class QueueTaskStatusLog
      */
     private $queueTask;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\EmployeeDesk", inversedBy="queueTaskStatusLogs")
+     */
+    private $employeeDesk;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\Employee", inversedBy="queueTaskStatusLogs")
+     */
+    private $employee;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -69,6 +79,30 @@ class QueueTaskStatusLog
     public function setQueueTask(?QueueTask $queueTask): self
     {
         $this->queueTask = $queueTask;
+
+        return $this;
+    }
+
+    public function getEmployeeDesk(): ?EmployeeDesk
+    {
+        return $this->employeeDesk;
+    }
+
+    public function setEmployeeDesk(?EmployeeDesk $employeeDesk): self
+    {
+        $this->employeeDesk = $employeeDesk;
+
+        return $this;
+    }
+
+    public function getEmployee(): ?Employee
+    {
+        return $this->employee;
+    }
+
+    public function setEmployee(?Employee $employee): self
+    {
+        $this->employee = $employee;
 
         return $this;
     }

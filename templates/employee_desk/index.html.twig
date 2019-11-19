@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Stalų sąrašas{% endblock %}
+
+{% block body %}
+    <div class="container">
+
+        <div class="py-5">
+
+            <h1 class="mb-3 text-center">Stalų sąrašas</h1>
+
+            <table class="table">
+                <thead class="thread-dark">
+                <tr>
+                    <th>Id</th>
+                    <th>Number</th>
+                    <th>actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for employee_desk in employee_desks %}
+                    <tr>
+                        <td>{{ employee_desk.id }}</td>
+                        <td>{{ employee_desk.number }}</td>
+                        <td>
+                            <a href="{{ path('employee_desk_show', {'id': employee_desk.id}) }}">show</a>
+                            <a href="{{ path('employee_desk_edit', {'id': employee_desk.id}) }}">edit</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="3">no records found</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <a href="{{ path('employee_desk_new') }}">Create new</a>
+        </div>
+    </div>
+
+
+
+
+{% endblock %}

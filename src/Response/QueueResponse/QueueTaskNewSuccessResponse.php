@@ -46,6 +46,6 @@ class QueueTaskNewSuccessResponse extends AbstractResponse
      */
     protected function status(): int
     {
-        return 400;
+        return 200;
     }
 }

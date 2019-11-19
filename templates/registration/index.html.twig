@@ -3,17 +3,23 @@
 {% block title %}Hello RegistrationController!{% endblock %}
 
 {% block javascripts %}
+
+    <script src="{{ asset('js/RegistrationRequestResponseController.js') }}"></script>
+
     <script>
+
         function showFurtherList(code, id) {
             //Jei jis turi vaiku juos atodarom jei ne neatidarom
             $(`#${code}`).toggle();
 
             //TODO: ajax send with parameters
-            if (getDivChildrenLength(`#${code}`) === 0)
-                ajaxSendWithParams('{{ path('queue_task_new') }}', {interestCode: code, interestId: id})
+            if (getDivChildrenLength(`#${code}`) === 0) {
+                let controller = new RegistrationRequestResponseController('{{ path('queue_task_new') }}', {interestCode: code, interestId: id});
+                controller.ajaxSend();
+            }
 
         }
-
+/*
         function ajaxSendWithParams(path, data) {
             let ajax = $.ajax({
                 url: path,
@@ -23,20 +29,15 @@
                 async: false,
             });
 
-            console.log("wa");
+            let controller = new RegistrationRequestResponseController();
 
             ajax.done(function (data) {
-
-                if (data['response']['error_code'] === "00")
-                    console.log("Success")
-                else
-                    console.log("Error")
-
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-
+                controller.validateCode(data);
+            }).fail(function () {
+                controller.onAjaxFail();
             });
 
-        }
+        }*/
 
         function getDivChildrenLength(selector) {
             return $(selector).children().length
@@ -44,6 +45,8 @@
 
     </script>
 {% endblock %}
+
+
 
 {% macro recursiveInterest(interest) %}
     {% import _self as self %}
@@ -66,18 +69,17 @@
 {% endmacro %}
 
 {% block body %}
-
     {% from _self import recursiveInterest %}
 
-    <div class="container p-3" style="height: 100vh; width: 100vw;">
-
-        <div class="d-flex align-items-stretch ">
-            <div class="container">
-                {% for ineterest in baseInterest %}
-                    {{ recursiveInterest(ineterest) }}
-                {% endfor %}
-            </div>
-        </div>
+    <div class="container vertical-center">
+    <ul class="list-group">
+        {% for ineterest in baseInterest %}
+            <li class="list-group-item">
+                <button class="btn" style="width: 100%; background-color: #eadca6"
+                        onclick="showFurtherList('{{ ineterest.getCode }}', '{{ ineterest.id }}')">{{ ineterest.fullName }}</button>
+            </li>
+        {% endfor %}
+    </ul>
     </div>
 
 {% endblock %}

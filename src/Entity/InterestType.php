@@ -43,10 +43,21 @@ class InterestType
      */
     private $queueTasks;
 
+    /**
+     * @ORM\ManyToMany(targetEntity="App\Entity\Employee", mappedBy="interestType")
+     */
+    private $employees;
+
     public function __construct()
     {
         $this->subType = new ArrayCollection();
         $this->queueTasks = new ArrayCollection();
+        $this->employees = new ArrayCollection();
+    }
+
+    public function __toString()
+    {
+        return $this->fullName;
     }
 
     public function getId(): ?int
@@ -147,6 +158,34 @@ class InterestType
             if ($queueTask->getInterestType() === $this) {
                 $queueTask->setInterestType(null);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Employee[]
+     */
+    public function getEmployees(): Collection
+    {
+        return $this->employees;
+    }
+
+    public function addEmployee(Employee $employee): self
+    {
+        if (!$this->employees->contains($employee)) {
+            $this->employees[] = $employee;
+            $employee->addInterestType($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEmployee(Employee $employee): self
+    {
+        if ($this->employees->contains($employee)) {
+            $this->employees->removeElement($employee);
+            $employee->removeInterestType($this);
         }
 
         return $this;

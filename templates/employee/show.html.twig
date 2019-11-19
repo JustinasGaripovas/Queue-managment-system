@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Employee{% endblock %}
+
+{% block body %}
+
+    <div class="container">
+        <div class="py-5">
+            <h1 class="text-center mb-3">Employee</h1>
+                <table class="table">
+                    <tbody>
+                    <tr>
+                        <th>Id</th>
+                        <td>{{ employee.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>FirstName</th>
+                        <td>{{ employee.firstName }}</td>
+                    </tr>
+                    <tr>
+                        <th>LastName</th>
+                        <td>{{ employee.lastName }}</td>
+                    </tr>
+                    <tr>
+                        <th>Username</th>
+                        <td>{{ employee.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>Age</th>
+                        <td>{{ employee.age }}</td>
+                    </tr>
+                    <tr>
+                        <th>Gender</th>
+                        <td>{{ employee.gender ? 'Vyras' : 'Moteris' }}</td>
+                    </tr>
+                    <tr>
+                        <th>WorkingSince</th>
+                        <td>{{ employee.workingSince }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+
+
+        </div>
+    </div>
+{% endblock %}

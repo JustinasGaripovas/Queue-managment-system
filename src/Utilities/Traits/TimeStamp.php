@@ -42,4 +42,14 @@ trait TimeStamp
             $this->createdAt = $currentDate->getTimestamp();
         }
     }
+
+    public function setIsActive($isActive)
+    {
+        $this->isActive = $isActive;
+    }
+
+    public function getIsActive()
+    {
+        return $this->getIsActive();
+    }
 }

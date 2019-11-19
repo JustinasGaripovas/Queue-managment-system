@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello JumbotronController!{% endblock %}
+
+{% block javascripts %}
+
+    <script>
+        $(document).ready(function() {
+            refreshItems();
+            setInterval(refreshItems,10000);
+        });
+
+        function refreshItems() {
+            let ajaxREFRESH = $.ajax({
+                url: '{{ path('jumbotron_refresh_assignments') }}',
+                type: 'POST',
+                dataType: 'json',
+                async: false,
+            });
+
+            ajaxREFRESH.done(function (data) {
+                createJumbotron(data);
+            }).fail(function () {
+                console.log('Error');
+            });
+
+            let ajaxLineREFRESH = $.ajax({
+                url: '{{ path('jumbotron_refresh_waiting') }}',
+                type: 'POST',
+                dataType: 'json',
+                async: false,
+            });
+
+            ajaxLineREFRESH.done(function (data) {
+                createWaitingLine(data);
+            }).fail(function () {
+                console.log('Error');
+            });
+        }
+        
+        function createJumbotron(data) {
+            let container = $('#jumbotron-container');
+            container.html('');
+
+            for (let i = 0; i < data.length; i++)
+                container.append(`<li class="list-group-item"> ${data[i]['number']} ◄ ${data[i]['queueNumber']} </li>`)
+        }
+
+        function createWaitingLine(data) {
+            let container = $('#jumbotron-waiting-list');
+            container.html('');
+
+            for (let i = 0; i < data.length; i++)
+                container.append(`<div class="text-center my-1 px-1" style="height: 9vh; border: solid gray 1px;display:flex;justify-content:center;align-items:center;">${data[i]}</div>`)
+        }
+
+    </script>
+
+{% endblock %}
+
+{% block body %}
+
+    <div class="row">
+
+        <div class="col-10">
+            <div id='jumbotron-container' class="container vertical-center" style="font-size: xx-large">
+
+            </div>
+        </div>
+
+        <div class="col-2">
+            <div id="jumbotron-waiting-list" class="container"  style="font-size: x-large">
+
+            </div>
+    </div>
+
+{% endblock %}

@@ -6,6 +6,12 @@
 parameters:
 
 services:
+
+    #application_backend.event_listener.user_entity:
+    #    class: App\EventListener\QueueTaskEventListener
+    #    tags:
+    #       - { name: doctrine.event_listener, event: preFlush }
+
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.

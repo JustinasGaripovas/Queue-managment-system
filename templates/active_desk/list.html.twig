@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Stalų sąrašas{% endblock %}
+
+{% block body %}
+
+    <style>
+        td{
+            vertical-align: middle !important;
+            text-align: center !important;
+        }
+    </style>
+
+    <div class="container">
+
+        <div class="py-5">
+
+            <h1 class="text-center mb-4">Stalų sąrašas</h1>
+
+            <table class="table">
+                <thead class="thead-dark">
+                <tr>
+                    <th>Id</th>
+                    <th>Stalo numeris</th>
+                    <th>Darbuotojas</th>
+                    <th>Ar naudojamas ?</th>
+                    <th>Ar aktyvus ?</th>
+                    <th>Eilės numeris</th>
+                    <th>Veiksmai</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for desk in desks %}
+                    <tr>
+                        <td>{{ desk.id }}</td>
+                        <td>{{ desk.number }}</td>
+                        <td>{{ desk.employee.firstName|default('') }} {{ desk.employee.lastName|default('') }}</td>
+                        <td>{{ desk.inUse?"Tiesa":"Netiesa" }}</td>
+                        <td>{{ desk.isOnline?"Tiesa":"Netiesa" }}</td>
+                        <td>{{ desk.queueTask.formattedQueueNumber|default('') }}</td>
+                        <td>
+                 {#               <a class="btn btn-primary d-block" href="{{ path('active_desk_login', {'id': desk.id}) }}">Prisijungti</a>
+              #}        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8">Nerasta duomenų</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

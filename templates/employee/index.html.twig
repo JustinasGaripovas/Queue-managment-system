@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Darbuotojų sąrašas{% endblock %}
+
+{% block body %}
+
+    <style>
+        td{
+            vertical-align: middle !important;
+            text-align: center !important;
+        }
+    </style>
+
+    <div class="container">
+
+        <div class="py-5">
+
+            <h1 class="text-center mb-4">Darbuotojų sąrašas</h1>
+
+            <table class="table">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Id</th>
+                        <th>Vardas</th>
+                        <th>Pavardė</th>
+                        <th>Prisijungimo vardas</th>
+                        <th>Amžius</th>
+                        <th>Lytis</th>
+                        <th>Dirba nuo</th>
+                        <th>Veiksmai</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for employee in employees %}
+                    <tr>
+                        <td>{{ employee.id }}</td>
+                        <td>{{ employee.firstName }}</td>
+                        <td>{{ employee.lastName }}</td>
+                        <td>{{ employee.username }}</td>
+                        <td>{{ employee.age }}</td>
+                        <td>{{ employee.gender ? 'Male' : 'Female' }}</td>
+                        <td>{{ employee.workingSince }}</td>
+                        <td>
+                            <a class="btn btn-primary d-block" href="{{ path('employee_show', {'id': employee.id}) }}">Rodyti</a>
+                            <a class="btn btn-success d-block" href="{{ path('employee_edit', {'id': employee.id}) }}">Pakoreguoti</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8">Nerasta duomenų</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <a href="{{ path('employee_new') }}">Sukurti naują</a>
+        </div>
+    </div>
+{% endblock %}

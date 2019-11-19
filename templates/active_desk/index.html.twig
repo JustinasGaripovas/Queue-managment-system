@@ -1,0 +1,144 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello ActiveDeskController!{% endblock %}
+
+{% block javascripts %}
+
+    <script>
+
+        $(document).ready(function () {
+            requestUpdate();
+            setInterval(requestUpdate,10000);
+        });
+
+
+
+        let toggle = {{ desk.isOnline|default('false') }};
+        function toggleDesk() {
+
+            $('#table-activation-button').toggleClass('btn-danger btn-success');
+            toggleDeskRequest()
+        }
+
+        function toggleDeskRequest() {
+
+            toggle = !toggle;
+            let ajaxREFRESH = $.ajax({
+                url: '{{ path('active_desk_toggle', {id: desk.id}) }}',
+                type: 'POST',
+                data: {toggle: toggle},
+                dataType: 'json',
+                async: false,
+            });
+
+            ajaxREFRESH.done(function (data) {
+                console.log(data['toggle']);
+                $('#online-label').html(data['toggle'].toString());
+            }).fail(function () {
+
+            });
+        }
+
+        function requestUpdate() {
+            let ajaxREFRESH = $.ajax({
+                url: '{{ path('active_desk_get_queue_task', {id: desk.id}) }}',
+                type: 'POST',
+                dataType: 'json',
+                async: false,
+            });
+
+            ajaxREFRESH.done(function (data) {
+                console.log(data[0])
+                updateDashboard(data[0])
+            }).fail(function () {
+                console.log('Error');
+            });
+        }
+
+        function updateDashboard(data) {
+            $('#queue-number').html(data['queue_task']['number']);
+            $('#interest-type').html(data['queue_task']['interest']);
+        }
+
+        function completedTask(status) {
+            let ajaxCOMPLETED = $.ajax({
+                url: '{{ path('active_desk_complete_task', {'id': desk.id } ) }}',
+                type: 'POST',
+                data: {completed: status},
+                dataType: 'json',
+                async: false,
+            });
+
+            ajaxCOMPLETED.done(function (data) {
+                console.log(data[0])
+                updateDashboard(data[0])
+            }).fail(function () {
+                console.log('Error');
+            });
+        }
+
+    </script>
+
+{% endblock %}
+
+{% block body %}
+
+    <style>
+        th, td{
+            vertical-align: middle !important;
+            text-align: center !important;
+        }
+
+        .row .btn{
+            width: 100%;
+        }
+
+    </style>
+
+
+    <div class="container mt-5 pt-5">
+        {#  General desk information  #}
+
+        <table class="table">
+            <tbody>
+            <tr>
+                <th>Ar stalas aktyvus: </th>
+                <td><span id="online-label">{{ desk.isOnline?'Taip':'Ne' }}</span></td>
+                <th>Stalo aktyvumo keitimas: </th>
+                <td>
+                    <button id="table-activation-button" class="btn btn-danger" onclick="toggleDesk()"> Go online </button>
+                </td>
+            </tr>
+            <tr>
+                <th colspan="2">Current operator </th>
+                <th colspan="2">{{desk.employee.firstname|default('Tuščia')}} {{desk.employee.lastname|default('')}} </th>
+            </tr>
+            </tbody>
+        </table>
+
+
+        {#  Queue task information  #}
+
+        <div>
+            <h1 class="text-center py-2"> Queue number interest type: <br> <span id="interest-type">{{ queueTask.interestType.fullName|default('Tuscia') }}</span></h1>
+            <h3 class="text-center py-2 mb-4"> Queue number: <span id="queue-number">{{ queueTask.formattedQueueNumber|default('000') }}</span></h3>
+        </div>
+
+        <div class="row">
+            <div class="col-4">
+                <button id="solved-button" onclick="completedTask(4)" class="btn btn-success"> Solved </button>
+            </div>
+            <div class="col-4">
+                <button id="unsolved-button" onclick="completedTask(6)" class="btn btn-danger"> Unsolvable </button>
+            </div>
+            <div class="col-4">
+                <button id="denied-button" onclick="completedTask(5)" class="btn btn-danger"> Denied </button>
+            </div>
+        </div>
+
+
+    </div>
+
+
+
+{% endblock %}

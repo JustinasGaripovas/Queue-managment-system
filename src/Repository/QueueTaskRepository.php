@@ -20,7 +20,6 @@ class QueueTaskRepository extends ServiceEntityRepository
         parent::__construct($registry, QueueTask::class);
     }
 
-
     /**
      * @param $interestType
      * @return mixed
@@ -37,6 +36,17 @@ class QueueTaskRepository extends ServiceEntityRepository
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    public function findOldest(int $count = 10)
+    {
+        return $this->createQueryBuilder('qt')
+            ->orderBy('qt.id', 'ASC')
+            ->andWhere('qt.createdAt > UNIX_TIMESTAMP(CURRENT_DATE())')
+            ->andWhere('qt.isComplete = false')
+            ->setMaxResults($count)
+            ->getQuery()
+            ->getResult();
     }
 
     /**
@@ -80,6 +90,14 @@ class QueueTaskRepository extends ServiceEntityRepository
         /*Danger*/
 
         return $query;
+    }
+
+    public function findNextQueueTaskForDesk()
+    {
+        return $this->createQueryBuilder('qt')
+            ->orderBy('qt.id', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 
 }

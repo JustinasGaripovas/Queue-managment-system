@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}EmployeeDesk index{% endblock %}
+
+{% block javascripts %}
+
+
+
+{% endblock %}
+
+{% block body %}
+    <h1>EmployeeDesk index</h1>
+
+    <a href="{{ path('employee_desk_request_queue_task', {'id': employee_desk.id}) }}">Request task</a>
+    <a href="{{ path('employee_desk_complete_queue_task', {'id': employee_desk.id}) }}">Complete task</a>
+
+{% endblock %}

@@ -8,6 +8,8 @@ use App\Repository\InterestTypeRepository;
 use App\Repository\QueueTaskRepository;
 use App\Response\QueueResponse\QueueTaskNewSuccessResponse;
 use App\Response\QueueResponse\QueueTaskNoAvalibleNumbersResponse;
+use App\Service\DeskAssigmentHelper;
+use App\Utilities\Enum\QueueTaskStatusEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\NonUniqueResultException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -50,8 +52,7 @@ class QueueTaskController extends AbstractController
         if (empty($oldestId))
             return 0;
 
-        if ($oldestId->getQueueNumber() >= 99)
-        {
+        if ($oldestId->getQueueNumber() >= 99) {
             if ($nextAvailable === null)
                 return null;
 
@@ -68,11 +69,13 @@ class QueueTaskController extends AbstractController
      * @return JsonResponse
      * @throws NonUniqueResultException
      */
-    public function queueTaskNew(Request $request, InterestTypeRepository $interestTypeRepository): JsonResponse
+    public function queueTaskNew(Request $request, InterestTypeRepository $interestTypeRepository, DeskAssigmentHelper $deskAssigmentHelper): JsonResponse
     {
         $queueTask = new QueueTask();
 
+        // Gets user selected ticket option.
         $interestId = $request->request->get('interestId');
+
         if (($interestType = $interestTypeRepository->findOneById($interestId)) === null)
             throw new InterestTypeInvalid();
 
@@ -83,10 +86,15 @@ class QueueTaskController extends AbstractController
         else
             return new QueueTaskNoAvalibleNumbersResponse();
 
+        $queueTask->addStatus(QueueTaskStatusEnum::NEW);
+        $queueTask->addStatus(QueueTaskStatusEnum::WAITING);
+
+
         $this->entityManager->persist($queueTask);
         $this->entityManager->flush();
 
-        //TODO: Return separate success response
-        return new QueueTaskNewSuccessResponse('Success', ['queue_number' => $queueTask->getQueueNumber()]);
+        $deskAssigmentHelper->assignDesk($queueTask);
+
+        return new QueueTaskNewSuccessResponse('Success', ['queue_number' => $queueTask->getFormattedQueueNumber()]);
     }
 }

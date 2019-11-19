@@ -10,7 +10,7 @@ abstract class AbstractException extends HttpException
 {
     public function __construct(\Throwable $previous = null, array $headers = [], ?int $code = 0)
     {
-        parent::__construct($this->getStatusCode(), $this->message(), $previous, $headers, $code);
+        parent::__construct($this->statusCode(), $this->message(), $previous, $headers, $code);
     }
 
     abstract protected function statusCode(): int;

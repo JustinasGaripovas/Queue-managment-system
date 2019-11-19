@@ -32,7 +32,6 @@ class QueueTask extends QueueTaskStateSwitch
      */
     private $id;
 
-
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\QueueTaskStatusLog", mappedBy="queueTask", orphanRemoval=true, cascade={"persist"})
      * @ORM\OrderBy({"id" = "DESC"})
@@ -55,17 +54,34 @@ class QueueTask extends QueueTaskStateSwitch
      */
     private $isQueueNumberInUse=true;
 
+    /**
+     * @ORM\OneToOne(targetEntity="App\Entity\EmployeeDesk", mappedBy="queueTask", cascade={"persist", "remove"})
+     */
+    private $employeeDesk;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $isComplete = false;
+
     public function __construct()
     {
         $this->statusList = new ArrayCollection();
 
         $this->setIsQueueNumberInUse(true);
-        $this->addStatus(QueueTaskStatusEnum::NEW);
     }
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getFormattedQueueNumber(): ?string
+    {
+        if ($this->getQueueNumber() <= 9)
+            return "{$this->getInterestType()->getId()}0{$this->getQueueNumber()}";
+        else
+            return "{$this->getInterestType()->getId()}{$this->getQueueNumber()}";
     }
 
     public function getQueueNumber(): ?int
@@ -90,9 +106,12 @@ class QueueTask extends QueueTaskStateSwitch
         return $this->statusList;
     }
 
-    public function addStatus($status)
+    public function addStatus($status,EmployeeDesk $employeeDesk = null, Employee $employee = null)
     {
         $statusObject = new QueueTaskStatusLog();
+
+        $statusObject->setEmployee($employee);
+        $statusObject->setEmployeeDesk($employeeDesk);
 
         if ($this->getNewestStatusList() === -1) {
             $statusObject->setStatus(QueueTaskStatusEnum::NEW);
@@ -104,7 +123,7 @@ class QueueTask extends QueueTaskStateSwitch
             $statusObject->setStatus($status);
             $this->addStatusList($statusObject);
         } else {
-            throw new StateSwitchException();
+//            throw new StateSwitchException();
         }
 
         return $this;
@@ -112,7 +131,7 @@ class QueueTask extends QueueTaskStateSwitch
 
     public function getNewestStatusList()
     {
-        $statusObject = $this->statusList->last();
+        $statusObject = $this->statusList->first();
 
         if ($statusObject === false)
             return -1;
@@ -125,14 +144,15 @@ class QueueTask extends QueueTaskStateSwitch
         $currentDate = new\DateTime('now');
         $statusList->setCreatedAt($currentDate->getTimestamp());
 
-        if (in_array($statusList->getStatus(), QueueTaskStatusEnum::END)) {
-            $this->isActive = false;
-            $this->isQueueNumberInUse = false;
-        }
-
         if (!$this->statusList->contains($statusList)) {
             $this->statusList[] = $statusList;
             $statusList->setQueueTask($this);
+        }
+
+        if (in_array($statusList->getStatus(), QueueTaskStatusEnum::END)) {
+            $this->isActive = false;
+            $this->isComplete = true;
+            $this->isQueueNumberInUse = false;
         }
 
         return $this;
@@ -171,6 +191,36 @@ class QueueTask extends QueueTaskStateSwitch
     public function setIsQueueNumberInUse(bool $isQueueNumberInUse): self
     {
         $this->isQueueNumberInUse = $isQueueNumberInUse;
+
+        return $this;
+    }
+
+    public function getEmployeeDesk(): ?EmployeeDesk
+    {
+        return $this->employeeDesk;
+    }
+
+    public function setEmployeeDesk(?EmployeeDesk $employeeDesk): self
+    {
+        $this->employeeDesk = $employeeDesk;
+
+        // set (or unset) the owning side of the relation if necessary
+        $newQueueTask = $employeeDesk === null ? null : $this;
+        if ($newQueueTask !== $employeeDesk->getQueueTask()) {
+            $employeeDesk->setQueueTask($newQueueTask);
+        }
+
+        return $this;
+    }
+
+    public function getIsComplete(): ?bool
+    {
+        return $this->isComplete;
+    }
+
+    public function setIsComplete(bool $isComplete): self
+    {
+        $this->isComplete = $isComplete;
 
         return $this;
     }

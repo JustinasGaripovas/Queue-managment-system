@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello ActiveDeskController!{% endblock %}
+{% block title %}Aktyvus stalas!{% endblock %}
 
 {% block javascripts %}
 
@@ -106,12 +106,13 @@
                 <td><span id="online-label">{{ desk.isOnline?'Taip':'Ne' }}</span></td>
                 <th>Stalo aktyvumo keitimas: </th>
                 <td>
-                    <button id="table-activation-button" class="btn btn-danger" onclick="toggleDesk()"> Go online </button>
+                    <button id="table-activation-button" class="btn btn-danger" onclick="toggleDesk()"> Aktyvus </button>
                 </td>
             </tr>
             <tr>
-                <th colspan="2">Current operator </th>
-                <th colspan="2">{{desk.employee.firstname|default('Tuščia')}} {{desk.employee.lastname|default('')}} </th>
+                <th colspan="2">Dabartinis darbuotojas </th>
+                <th colspan="1">{{desk.employee.firstname|default('Tuščia')}} {{desk.employee.lastname|default('')}} </th>
+                <th colspan="1"> <a class="btn btn-danger" href="{{ path('active_desk_unoccupy', {'id': desk.id}) }}">Palikti stalą</a> </th>
             </tr>
             </tbody>
         </table>
@@ -120,19 +121,19 @@
         {#  Queue task information  #}
 
         <div>
-            <h1 class="text-center py-2"> Queue number interest type: <br> <span id="interest-type">{{ queueTask.interestType.fullName|default('Tuscia') }}</span></h1>
-            <h3 class="text-center py-2 mb-4"> Queue number: <span id="queue-number">{{ queueTask.formattedQueueNumber|default('000') }}</span></h3>
+            <h1 class="text-center py-2"> Užklausos tipas: <br> <span id="interest-type">{{ queueTask.interestType.fullName|default('Tuscia') }}</span></h1>
+            <h3 class="text-center py-2 mb-4"> Laukimo numeris: <span id="queue-number">{{ queueTask.formattedQueueNumber|default('000') }}</span></h3>
         </div>
 
         <div class="row">
             <div class="col-4">
-                <button id="solved-button" onclick="completedTask(4)" class="btn btn-success"> Solved </button>
+                <button id="solved-button" onclick="completedTask(4)" class="btn btn-success"> Išspręstas </button>
             </div>
             <div class="col-4">
-                <button id="unsolved-button" onclick="completedTask(6)" class="btn btn-danger"> Unsolvable </button>
+                <button id="unsolved-button" onclick="completedTask(6)" class="btn btn-danger"> Neįmanoma išspręsti </button>
             </div>
             <div class="col-4">
-                <button id="denied-button" onclick="completedTask(5)" class="btn btn-danger"> Denied </button>
+                <button id="denied-button" onclick="completedTask(5)" class="btn btn-danger"> Atšaukas </button>
             </div>
         </div>
 

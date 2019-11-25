@@ -2,6 +2,12 @@
 
 {% block title %}Hello RegistrationController!{% endblock %}
 
+{% block navigation %}
+    {% if is_granted("IS_AUTHENTICATED_FULLY") %}
+        {{ parent() }}
+    {% endif %}
+{% endblock %}
+
 {% block javascripts %}
 
     <script src="{{ asset('js/RegistrationRequestResponseController.js') }}"></script>

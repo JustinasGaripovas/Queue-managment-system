@@ -26,14 +26,20 @@ class EmployeeType extends AbstractType
                     'Moteris' => 0
                 ]
             ])
+            ->add('roles', ChoiceType::class, [
+                'multiple' => true,
+                'choices' => [
+                    'Admin' => '["ROLE_ADMIN"]',
+                    'Employee' => '["ROLE_EMPLOYEE"]'
+                ]
+            ])
             ->add('workingSince')
             ->add('plainPassword', RepeatedType::class, array(
                 'type' => PasswordType::class,
-                'first_options'  => array('label' => 'Password'),
+                'first_options' => array('label' => 'Password'),
                 'second_options' => array('label' => 'Repeat Password'),
             ))
-            ->add('interestType')
-        ;
+            ->add('interestType');
     }
 
     public function configureOptions(OptionsResolver $resolver)

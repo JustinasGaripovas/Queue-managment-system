@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Employee;
 use App\Form\EmployeeType;
 use App\Repository\EmployeeRepository;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,6 +14,7 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 /**
  * @Route("/employees")
+ * @Security("is_granted('ROLE_ADMIN')")
  */
 class EmployeeController extends AbstractController
 {
@@ -25,35 +27,6 @@ class EmployeeController extends AbstractController
     {
         return $this->render('employee/index.html.twig', [
             'employees' => $employeeRepository->findAll(),
-        ]);
-    }
-
-    /**
-     * @Route("/register", name="employee_new", methods={"GET","POST"})
-     * @param Request $request
-     * @return Response
-     */
-    public function register(Request $request, UserPasswordEncoderInterface $passwordEncoder): Response
-    {
-        $employee = new Employee();
-        $form = $this->createForm(EmployeeType::class, $employee);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-
-            $password = $passwordEncoder->encodePassword($employee, $employee->getPlainPassword());
-            $employee->setPassword($password);
-
-            $entityManager = $this->getDoctrine()->getManager();
-            $entityManager->persist($employee);
-            $entityManager->flush();
-
-            return $this->redirectToRoute('employee_index');
-        }
-
-        return $this->render('employee/new.html.twig', [
-            'employee' => $employee,
-            'form' => $form->createView(),
         ]);
     }
 

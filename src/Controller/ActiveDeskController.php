@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Employee;
 use App\Entity\EmployeeDesk;
 use App\Entity\QueueTask;
 use App\Repository\EmployeeDeskRepository;
@@ -13,6 +14,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
+/**
+ * Class ActiveDeskController
+ * @package App\Controller
+ */
 class ActiveDeskController extends AbstractController
 {
 
@@ -34,6 +39,52 @@ class ActiveDeskController extends AbstractController
     }
 
     /**
+     * @Route("/active/desk/{id}/occupy", name="active_desk_occupy")
+     */
+    public function occupyDesk(EmployeeDesk $employeeDesk)
+    {
+        /** @var Employee $employee */
+        $employee = $this->getUser();
+
+        if (null === $employeeDesk->getEmployee())
+        {
+            $employeeDesk->setEmployee($employee);
+
+            $this->getDoctrine()->getManager()->flush();
+
+            return $this->redirectToRoute('active_desk_dashboard',["id" => $employeeDesk->getId()]);
+        }else{
+
+            if ($employee === $employeeDesk->getEmployee())
+            {
+                return $this->redirectToRoute('active_desk_dashboard',["id" => $employeeDesk->getId()]);
+            }
+
+            $this->addFlash(
+                'warning',
+                'Stalas yra užimtas '
+            );
+
+            return $this->redirectToRoute('active_desk');
+        }
+    }
+
+    /**
+     * @Route("/active/desk/{id}/unoccupy", name="active_desk_unoccupy")
+     */
+    public function unOccupyDesk(EmployeeDesk $employeeDesk)
+    {
+        /** @var Employee $employee */
+        $employee = $this->getUser();
+
+        $employeeDesk->setEmployee(null);
+        $this->getDoctrine()->getManager()->flush();
+
+        return $this->redirectToRoute('active_desk');
+    }
+
+
+    /**
      * @Route("/active/desk/{id}/dashboard", name="active_desk_dashboard")
      */
     public function manageDesk(EmployeeDesk $employeeDesk)
@@ -43,6 +94,8 @@ class ActiveDeskController extends AbstractController
             'queueTask' => $employeeDesk->getQueueTask()
         ]);
     }
+
+
 
     /**
      * @Route("/active/desk/{id}/completed", name="active_desk_complete_task")
@@ -130,6 +183,7 @@ class ActiveDeskController extends AbstractController
         ]);
     }
 
+
     /**
      * @Route("/active/desk/{id}/toggle", name="active_desk_toggle")
      */
@@ -141,8 +195,6 @@ class ActiveDeskController extends AbstractController
 
         $this->entityManager->flush();
 
-        return new JsonResponse(['toggle'=>$employeeDesk->getIsOnline()]);
+        return new JsonResponse(['toggle'=>$employeeDesk->getIsOnline()?"Taip":"Ne"]);
     }
-
-
 }
